@@ -1,0 +1,130 @@
+description: >
+  Build a Docker image with docker buildx.
+  NOTE: Some commands may not work with AWS CLI Version 1.
+
+parameters:
+  account_id:
+    type: string
+    default: ${AWS_ACCOUNT_ID}
+    description: >
+      The 12 digit AWS Account ID associated with the ECR account.
+      This field is required
+
+  repo:
+    type: string
+    description: Name of an Amazon ECR repository
+
+  tag:
+    type: string
+    default: "latest"
+    description: A comma-separated string containing docker image tags (default = latest)
+
+  dockerfile:
+    type: string
+    default: Dockerfile
+    description: Name of dockerfile to use. Defaults to Dockerfile.
+
+  path:
+    default: .
+    description: >-
+      Path to the directory containing your Dockerfile. Defaults to . (working directory).
+    type: string
+
+  build_path:
+    default: .
+    description: >-
+      Path to the directory containing your build context. Defaults to . (working directory).
+    type: string
+
+  no_output_timeout:
+    type: string
+    default: 10m
+    description: The amount of time to allow the docker command to run before timing out.
+
+  extra_build_args:
+    default: ""
+    description: >
+      Extra flags to pass to docker build. This parameter accepts multi-line arguments.
+      If your argument spans multiple lines, please use the Folded Block Style denoted by `>-` (e.g. extra_build_args: >-).
+      For examples of available flags, see https://docs.docker.com/engine/reference/commandline/buildx_build
+    type: string
+
+  skip_when_tags_exist:
+    type: boolean
+    default: false
+    description: Whether to skip image building if all specified tags already exist in ECR
+
+  region:
+    type: string
+    default: ${AWS_DEFAULT_REGION}
+    description: >
+      AWS region of ECR repository. Defaults to environment variable ${AWS_DEFAULT_REGION}
+
+  profile_name:
+    type: string
+    default: "default"
+    description: >
+      AWS profile name to be configured. Only required when skip_when_tags_exist
+      or ecr_login are set to true.
+
+  public_registry:
+    type: boolean
+    description: Set to true if building and pushing an image to a Public Registry on ECR.
+    default: false
+
+  platform:
+    type: string
+    default: "linux/amd64"
+    description: Platform targets for the docker image, multi arch images. Ex. linux/amd64,linux/arm64.
+
+  public_registry_alias:
+    type: string
+    default: ${AWS_ECR_PUBLIC_REGISTRY_ALIAS}
+    description: >
+      The public registry alias for your public repositories. This parameter is required if pushing to a public repository
+      It can be found in the Amazon ECR console > Public Registries.
+
+  push_image:
+    type: boolean
+    default: true
+    description: Set to false to build an image without pushing to repository.  Defaults to true.
+
+  lifecycle_policy_path:
+    type: string
+    default: ""
+    description: |
+      The path to the .json file containing the lifecycle policy to be applied to a specified repository in AWS ECR.
+
+      The docker buildx command uses a builder-context to build multi-architecture images simultaneously. In order for
+      buildx builders to be saved with Docker Layer Caching, the builder must explicitly be named.
+      Specify the a builder name with this parameter. This parameter defaults to "default-builder" if none is provided.
+
+  aws_domain:
+    type: string
+    default: "amazonaws.com"
+    description: >
+      The AWS domain for your region, e.g in China, the AWS domain is amazonaws.com.cn
+      The default value is amazonaws.com
+
+steps:
+  - run:
+      name: Build Docker Image with buildx
+      environment:
+        AWS_ECR_STR_TAG: << parameters.tag >>
+        AWS_ECR_BOOL_SKIP_WHEN_TAGS_EXIST: <<parameters.skip_when_tags_exist>>
+        AWS_ECR_STR_REPO: << parameters.repo >>
+        AWS_ECR_STR_EXTRA_BUILD_ARGS: <<parameters.extra_build_args>>
+        AWS_ECR_EVAL_PATH: <<parameters.path>>
+        AWS_ECR_STR_DOCKERFILE: <<parameters.dockerfile>>
+        AWS_ECR_STR_PROFILE_NAME: <<parameters.profile_name>>
+        AWS_ECR_STR_ACCOUNT_ID: <<parameters.account_id>>
+        AWS_ECR_STR_REGION: <<parameters.region>>
+        AWS_ECR_STR_PLATFORM: <<parameters.platform>>
+        AWS_ECR_BOOL_PUBLIC_REGISTRY: <<parameters.public_registry>>
+        AWS_ECR_BOOL_PUSH_IMAGE: <<parameters.push_image>>
+        AWS_ECR_STR_LIFECYCLE_POLICY_PATH: <<parameters.lifecycle_policy_path>>
+        AWS_ECR_STR_PUBLIC_REGISTRY_ALIAS: <<parameters.public_registry_alias>>
+        AWS_ECR_EVAL_BUILD_PATH: <<parameters.build_path>>
+        AWS_ECR_STR_AWS_DOMAIN: <<parameters.aws_domain>>
+      command: <<include(scripts/docker_buildx.sh)>>
+      no_output_timeout: <<parameters.no_output_timeout>>

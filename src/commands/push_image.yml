@@ -1,0 +1,49 @@
+description: >
+  Push a container image to the Amazon ECR registry
+  NOTE: Some commands may not work with AWS CLI Version 1.
+parameters:
+  account_id:
+    type: string
+    default: ${AWS_ACCOUNT_ID}
+    description: >
+      The 12 digit AWS Account ID associated with the ECR account.
+      This field is required
+  region:
+    type: string
+    default: ${AWS_DEFAULT_REGION}
+    description: >
+      AWS region of ECR repository. Defaults to environment variable ${AWS_DEFAULT_REGION}
+  repo:
+    description: Name of an Amazon ECR repository
+    type: string
+  tag:
+    default: latest
+    description: A comma-separated string containing docker image tags (default = latest)
+    type: string
+  public_registry:
+    type: boolean
+    description: Set to true if building and pushing an image to a Public Registry on ECR.
+    default: false
+  public_registry_alias:
+    type: string
+    default: ${AWS_ECR_PUBLIC_REGISTRY_ALIAS}
+    description: >
+      The public registry alias for your public repositories. This parameter is required if pushing to a public repository
+      It can be found in the Amazon ECR console > Public Registries.
+  aws_domain:
+    type: string
+    default: "amazonaws.com"
+    description: >
+      AWS domain, China regions will require override.
+steps:
+  - run:
+      name: Push image to AWS ECR
+      environment:
+        AWS_ECR_STR_REPO: << parameters.repo >>
+        AWS_ECR_STR_REGION: << parameters.region >>
+        AWS_ECR_STR_TAG: << parameters.tag >>
+        AWS_ECR_BOOL_PUBLIC_REGISTRY: <<parameters.public_registry>>
+        AWS_ECR_STR_PUBLIC_REGISTRY_ALIAS: <<parameters.public_registry_alias>>
+        AWS_ECR_STR_ACCOUNT_ID: << parameters.account_id >>
+        AWS_ECR_STR_AWS_DOMAIN: <<parameters.aws_domain>>
+      command: << include(scripts/push_image.sh) >>

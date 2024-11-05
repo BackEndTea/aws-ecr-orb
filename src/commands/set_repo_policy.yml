@@ -1,0 +1,41 @@
+description: >
+  Set a repository policy on an AWS ECR repository
+  NOTE: Some commands may not work with AWS CLI Version 1.
+
+parameters:
+  profile_name:
+    type: string
+    default: "default"
+    description: AWS profile name to be configured.
+
+  region:
+    type: string
+    default: ${AWS_DEFAULT_REGION}
+    description: >
+      AWS region of ECR repository. Defaults to environment variable ${AWS_DEFAULT_REGION}
+
+  repo:
+    type: string
+    description: Name of an Amazon ECR repository
+
+  public_registry:
+    type: boolean
+    description: Set to true if building and pushing an image to a Public Registry on ECR.
+    default: false
+
+  repo_policy_path:
+    type: string
+    default: ""
+    description: |
+      The path to the .json file containing the repository policy to be applied to a specified repository in AWS ECR.
+
+steps:
+  - run:
+      name: Set Repository Policy
+      environment:
+        AWS_ECR_STR_PROFILE_NAME: <<parameters.profile_name>>
+        AWS_ECR_STR_REGION: <<parameters.region>>
+        AWS_ECR_STR_REPO: <<parameters.repo>>
+        AWS_ECR_BOOL_PUBLIC_REGISTRY: <<parameters.public_registry>>
+        AWS_ECR_STR_REPO_POLICY_PATH: <<parameters.repo_policy_path>>
+      command: <<include(scripts/set_repo_policy.sh)>>

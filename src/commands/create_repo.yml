@@ -1,0 +1,55 @@
+description: >
+  Create a new AWS ECR repository.
+  NOTE: Some commands may not work with AWS CLI Version 1.
+
+parameters:
+  profile_name:
+    type: string
+    default: "default"
+    description: AWS profile name to be configured.
+
+  region:
+    type: string
+    default: ${AWS_DEFAULT_REGION}
+    description: >
+      AWS region of ECR repository. Defaults to environment variable ${AWS_DEFAULT_REGION}
+
+  repo:
+    type: string
+    description: Name of an Amazon ECR repository
+
+  repo_scan_on_push:
+    type: boolean
+    default: true
+    description: Should the created repo be security scanned on push?
+
+  public_registry:
+    type: boolean
+    description: Set to true if building and pushing an image to a Public Registry on ECR.
+    default: false
+
+  repo_encryption_type:
+    type: enum
+    description: The encryption type to use.
+    default: "AES256"
+    enum: ["AES256", "KMS"]
+
+  encryption_kms_key:
+    type: string
+    description: >
+      If you use the KMS encryption type, specify the KMS key to use for encryption.
+      The alias, key ID, or full ARN of the KMS key can be specified.
+    default: ""
+
+steps:
+  - run:
+      name: Create Repository
+      environment:
+        AWS_ECR_STR_PROFILE_NAME: <<parameters.profile_name>>
+        AWS_ECR_STR_REGION: <<parameters.region>>
+        AWS_ECR_STR_REPO: <<parameters.repo>>
+        AWS_ECR_BOOL_REPO_SCAN_ON_PUSH: <<parameters.repo_scan_on_push>>
+        AWS_ECR_BOOL_PUBLIC_REGISTRY: <<parameters.public_registry>>
+        AWS_ECR_ENUM_ENCRYPTION_TYPE: <<parameters.repo_encryption_type>>
+        AWS_ECR_STR_ENCRYPTION_KMS_KEY: <<parameters.encryption_kms_key>>
+      command: <<include(scripts/create_repo.sh)>>
